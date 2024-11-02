@@ -31,11 +31,11 @@ jobs:
           docker tag minha_aplicacao:latest SEU_USUARIO/minha_aplicacao:latest
           docker push SEU_USUARIO/minha_aplicacao:latest
       
-      - name: Deploy to AWS
-        uses: einaregilsson/ecs-deploy@v2.2.1
+      - name: Deploy to AWS ECS
+        uses: aws-actions/ecs-deploy-task-definition@v1
         with:
           cluster: minha_aplicacao_cluster
           service: minha_aplicacao_service
-          task_definition: minha_aplicacao
+          task-definition: minha_aplicacao:latest 
           region: us-east-2
-          wait_for_service_stability: true
+          wait-for-service-stability: true
