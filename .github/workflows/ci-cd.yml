@@ -28,8 +28,8 @@ jobs:
 
       - name: Push Docker image
         run: |
-          docker tag minha_aplicacao:latest SEU_USUARIO/minha_aplicacao:latest
-          docker push SEU_USUARIO/minha_aplicacao:latest
+          docker tag minha_aplicacao:latest luisfelipes/minha_aplicacao:latest
+          docker push luisfelipes/minha_aplicacao:latest
       
       - name: Deploy to AWS ECS
         uses: aws-actions/ecs-deploy-task-definition@v1
