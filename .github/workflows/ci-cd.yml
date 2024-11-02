@@ -1,0 +1,41 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main  
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build Docker image
+        run: |
+          docker build -t minha_aplicacao:latest .
+      
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push Docker image
+        run: |
+          docker tag minha_aplicacao:latest SEU_USUARIO/minha_aplicacao:latest
+          docker push SEU_USUARIO/minha_aplicacao:latest
+      
+      - name: Deploy to AWS
+        uses: einaregilsson/ecs-deploy@v2.2.1
+        with:
+          cluster: minha_aplicacao_cluster
+          service: minha_aplicacao_service
+          task_definition: minha_aplicacao
+          region: us-east-2
+          wait_for_service_stability: true
