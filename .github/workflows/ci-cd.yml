@@ -5,6 +5,12 @@ on:
     branches:
       - main  
 
+env:
+  AWS_REGION: us-east-2
+  ECR_REPOSITORY: minha_aplicacao
+  ECS_SERVICE: minha_aplicacao_service
+  ECS_CLUSTER: minha_aplicacao_cluster
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,29 +19,37 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build Docker image
         run: |
-          docker build -t minha_aplicacao:latest .
-      
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          docker build -t $ECR_REPOSITORY:latest .
+          docker tag $ECR_REPOSITORY:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
 
-      - name: Push Docker image
+      - name: Push Docker image to Amazon ECR
         run: |
-          docker tag minha_aplicacao:latest luisfelipes/minha_aplicacao:latest
-          docker push luisfelipes/minha_aplicacao:latest
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
       
-      - name: Deploy to AWS ECS
-        uses: aws-actions/ecs-deploy-task-definition@v1
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          cluster: minha_aplicacao_cluster
-          service: minha_aplicacao_service
-          task-definition: minha_aplicacao:latest 
-          region: us-east-2
+          task-definition: minha_aplicacao
+          container-name: minha_aplicacao # substitua pelo nome real do seu contêiner na definição da tarefa
+          image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
+
+      - name: Deploy to AWS ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          cluster: ${{ env.ECS_CLUSTER }}
+          service: ${{ env.ECS_SERVICE }}
+          task-definition: ${{ steps.task-def.outputs.task-definition }} 
+          region: ${{ env.AWS_REGION }}
           wait-for-service-stability: true
