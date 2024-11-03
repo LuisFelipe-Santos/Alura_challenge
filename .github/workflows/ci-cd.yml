@@ -6,11 +6,11 @@ on:
       - "main"
 
 env:
-  AWS_REGION: us-east-2                   # Ajuste para sua região preferida
-  ECR_REPOSITORY: minha_aplicacao         # Nome do seu repositório ECR
-  ECS_SERVICE: minha_aplicacao_service     # Nome do seu serviço ECS
-  ECS_CLUSTER: minha_aplicacao_cluster     # Nome do seu cluster ECS
-  CONTAINER_NAME: minha_aplicacao         # Nome do seu contêiner na definição da tarefa
+  AWS_REGION: us-east-2
+  ECR_REPOSITORY: minha_aplicacao
+  ECS_SERVICE: minha_aplicacao_service
+  ECS_CLUSTER: minha_aplicacao_cluster
+  CONTAINER_NAME: minha_aplicacao
 
 jobs:
   deploy:
@@ -35,7 +35,7 @@ jobs:
       id: build-image
       run: |
         # O Dockerfile está localizado em setup/Dockerfile
-        docker build -t minha_aplicacao:latest -f setup/Dockerfile .
+        docker build -t minha_aplicacao:latest -f ./setup/Dockerfile .
         docker tag minha_aplicacao:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
         docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
 
@@ -52,4 +52,4 @@ jobs:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
         service: ${{ env.ECS_SERVICE }}
         cluster: ${{ env.ECS_CLUSTER }}
-        wait-for-service-stability: false
+        wait-for-service-stability: true
