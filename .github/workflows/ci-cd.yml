@@ -16,6 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: List directory contents
+        run: |
+          ls -la setup
+
       - name: Checkout code
         uses: actions/checkout@v2
       
@@ -31,7 +35,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t minha_aplicacao:latest -f setup/Dockerfile .
+          docker build -t minha_aplicacao:latest -f setup/Dockerfile setup
           docker tag minha_aplicacao:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
 
       - name: Push Docker image to Amazon ECR
@@ -42,7 +46,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: minha_aplicacao
-          container-name: minha_aplicacao # substitua pelo nome real do seu contêiner na definição da tarefa
+          container-name: minha_aplicacao:5 # substitua pelo nome real do seu contêiner na definição da tarefa
           image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
 
       - name: Deploy to AWS ECS
