@@ -31,7 +31,8 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t minha_aplicacao:latest -f Dockerfile .
+          docker build -t minha_aplicacao:latest -f drf_teste_documentacao/Dockerfile drf_teste_documentacao
+          docker tag minha_aplicacao:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
           
       - name: Push Docker image to Amazon ECR
         run: |
