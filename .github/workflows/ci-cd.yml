@@ -42,6 +42,9 @@ jobs:
         run: |
           aws ecs describe-task-definition --task-definition minha_aplicacao --query taskDefinition > taskdefinition.json
 
+      - name: Debug task definition JSON
+        run: echo "${{ steps.update-task-def.outputs.task-definition }}"
+
       - name: Update image in ECS task definition
         id: update-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -49,9 +52,6 @@ jobs:
           task-definition: taskdefinition.json
           container-name: minha_aplicacao
           image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
-
-      - name: Debug task definition JSON
-        run: echo "${{ steps.update-task-def.outputs.task-definition }}"
       
       - name: Register new task definition with updated image
         run: |
