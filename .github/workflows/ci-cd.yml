@@ -42,6 +42,24 @@ jobs:
         run: |
           aws ecs describe-task-definition --task-definition minha_aplicacao --query taskDefinition > taskdefinition.json
 
+      - name: Criar definição de tarefa
+        run: |
+          echo '{
+              "family": "minha_aplicacao",
+              "containerDefinitions": [{
+              "name": "minha_aplicacao_container",
+              "image": "${{ steps.build.outputs.image }}",
+              "memory": 512,
+              "cpu": 256,
+              "essential": true,
+              "portMappings": [{
+              "containerPort": 80,
+              "hostPort": 80
+            }]
+          }]
+          }' > /home/runner/work/_temp/task-definition--1986-VHShxklHu25z-.json
+
+
       - name: Update image in ECS task definition
         id: update-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
