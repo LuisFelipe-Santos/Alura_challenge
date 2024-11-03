@@ -40,7 +40,11 @@ jobs:
 
       - name: Download current task definition
         run: |
-          aws ecs describe-task-definition --task-definition minha_aplicacao --query taskDefinition > taskdefinition.json
+          aws ecs describe-task-definition --task-definition minha_aplicacao --query taskDefinition --output json > taskdefinition.json
+
+      - name: Print task definition JSON
+        run: |
+          cat taskdefinition.json
 
       - name: Update image in ECS task definition
         id: update-task-def
@@ -52,7 +56,8 @@ jobs:
 
       - name: Register new task definition
         run: |
-          aws ecs register-task-definition --cli-input-json "${{ steps.update-task-def.outputs.task-definition }}"
+          echo "${{ steps.update-task-def.outputs.task-definition }}" > new-task-definition.json
+          aws ecs register-task-definition --cli-input-json file://new-task-definition.json
 
       - name: Deploy to AWS ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
