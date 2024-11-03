@@ -39,12 +39,12 @@ jobs:
         run: |
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
       
-      - name: Fill in the new image ID in the Amazon ECS task definition
+      - name:  Fill in the new image ID in the Amazon ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: minha_aplicacao
-          container-name: minha_aplicacao
+          task-definition: minha_aplicacao:5
+          container-name: minha_aplicacao 
           image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
 
       - name: Deploy to AWS ECS
