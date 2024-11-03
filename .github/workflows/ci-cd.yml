@@ -47,7 +47,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: taskdefinition.json
-          container-name: minha_aplicacao  # Substitua pelo nome real do seu contêiner
+          container-name: minha_aplicacao 
           image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
 
       - name: Register new task definition
