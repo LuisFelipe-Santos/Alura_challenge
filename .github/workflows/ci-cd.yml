@@ -10,7 +10,7 @@ env:
   ECR_REPOSITORY: minha_aplicacao
   ECS_SERVICE: minha_aplicacao_service
   ECS_CLUSTER: minha_aplicacao_cluster
-
+ 
 jobs:
   build:
     runs-on: ubuntu-latest
