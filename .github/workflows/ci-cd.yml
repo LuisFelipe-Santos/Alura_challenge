@@ -16,7 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-
       - name: Checkout code
         uses: actions/checkout@v2
       
@@ -32,26 +31,34 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t minha_aplicacao:latest -f drf_teste_documentacao/Dockerfile drf_teste_documentacao
+          docker build -t minha_aplicacao:latest -f setup/Dockerfile .
           docker tag minha_aplicacao:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
 
       - name: Push Docker image to Amazon ECR
         run: |
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
-      
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def 
-        uses: aws-actions/amazon-ecs-render-task-definition@v2
+
+      - name: Download current task definition
+        run: |
+          aws ecs describe-task-definition --task-definition minha_aplicacao --query taskDefinition > taskdefinition.json
+
+      - name: Update image in ECS task definition
+        id: update-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: minha_aplicacao  
-          container-name: minha_aplicacao 
+          task-definition: taskdefinition.json
+          container-name: minha_aplicacao  # Substitua pelo nome real do seu contêiner
           image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
+
+      - name: Register new task definition
+        run: |
+          aws ecs register-task-definition --cli-input-json "${{ steps.update-task-def.outputs.task-definition }}"
 
       - name: Deploy to AWS ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           cluster: ${{ env.ECS_CLUSTER }}
           service: ${{ env.ECS_SERVICE }}
-          task-definition: ${{ steps.task-def.outputs.task-definition }} 
+          task-definition: ${{ steps.update-task-def.outputs.task-definition }}  # Referência à nova definição registrada
           region: ${{ env.AWS_REGION }}
           wait-for-service-stability: true
