@@ -40,7 +40,7 @@ jobs:
 
       - name: Download current task definition
         run: |
-          aws ecs describe-task-definition --task-definition minha_aplicacao --query taskDefinition --output json > taskdefinition.json
+          aws ecs describe-task-definition --task-definition minha_aplicacao --query taskDefinition > taskdefinition.json
 
       - name: Update image in ECS task definition
         id: update-task-def
@@ -59,6 +59,6 @@ jobs:
         with:
           cluster: ${{ env.ECS_CLUSTER }}
           service: ${{ env.ECS_SERVICE }}
-          task-definition: ${{ steps.update-task-def.outputs.task-definition }}  # Referência à nova definição registrada
+          task-definition: ${{ steps.update-task-def.outputs.task-definition }}  gistrada
           region: ${{ env.AWS_REGION }}
           wait-for-service-stability: true
