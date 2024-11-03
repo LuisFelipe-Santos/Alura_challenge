@@ -52,10 +52,18 @@ jobs:
           task-definition: taskdefinition.json
           container-name: minha_aplicacao
           image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
+
+
+      - name: Save updated task definition to temporary file
+        run: echo "${{ steps.update-task-def.outputs.task-definition }}" > updated-taskdef.json
       
-      - name: Register new task definition with updated image
+      - name: Register new task definition from file
         run: |
-          aws ecs register-task-definition --cli-input-json "${{ steps.update-task-def.outputs.task-definition }}"
+          aws ecs register-task-definition --cli-input-json file://updated-taskdef.json
+
+      ###- name: Register new task definition with updated image
+        ##run: |
+          ##aws ecs register-task-definition --cli-input-json "${{ steps.update-task-def.outputs.task-definition }}"
 
       - name: Deploy to AWS ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
