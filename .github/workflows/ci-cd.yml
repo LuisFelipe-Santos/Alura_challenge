@@ -16,9 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: List directory contents
-        run: |
-          ls -la setup
 
       - name: Checkout code
         uses: actions/checkout@v2
@@ -32,6 +29,10 @@ jobs:
 
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
+
+      - name: List directory contents
+        run: |
+          ls -la setup
 
       - name: Build Docker image
         run: |
