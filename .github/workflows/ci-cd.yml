@@ -1,59 +1,56 @@
-name: CI/CD Pipeline
+name: Deploy to Amazon ECS
 
 on:
   push:
     branches:
-      - main  
+      - "main"
 
 env:
-  AWS_REGION: us-east-2
-  ECR_REPOSITORY: minha_aplicacao
-  ECS_SERVICE: minha_aplicacao_service
-  ECS_CLUSTER: minha_aplicacao_cluster
+  AWS_REGION: us-east-2                   # Ajuste para sua região preferida
+  ECR_REPOSITORY: minha_aplicacao         # Nome do seu repositório ECR
+  ECS_SERVICE: minha_aplicacao_service     # Nome do seu serviço ECS
+  ECS_CLUSTER: minha_aplicacao_cluster     # Nome do seu cluster ECS
+  ECS_TASK_DEFINITION: .aws/task-definition.json # Caminho para sua definição da tarefa
+  CONTAINER_NAME: minha_aplicacao         # Nome do seu contêiner na definição da tarefa
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+    - name: Checkout
+      uses: actions/checkout@v3
 
-      - name: Log in to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v1
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
 
-      - name: List files in setup directory
-        run: |
-          ls -al drf_teste_documentacao/setup
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build Docker image
-        run: |
-          docker build -t minha_aplicacao:latest -f drf_teste_documentacao/setup/Dockerfile drf_teste_documentacao/setup
-          docker tag minha_aplicacao:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
-          
-      - name: Push Docker image to Amazon ECR
-        run: |
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
-      
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: minha_aplicacao
-          container-name: minha_aplicacao # substitua pelo nome real do seu contêiner na definição da tarefa
-          image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      run: |
+        # O Dockerfile está localizado em setup/Dockerfile
+        docker build -t minha_aplicacao:latest -f setup/Dockerfile setup
+        docker tag minha_aplicacao:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
+        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
 
-      - name: Deploy to AWS ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          cluster: ${{ env.ECS_CLUSTER }}
-          service: ${{ env.ECS_SERVICE }}
-          task-definition: ${{ steps.task-def.outputs.task-definition }} 
-          region: ${{ env.AWS_REGION }}
-          wait-for-service-stability: true
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: minha_aplicacao
+        container-name: ${{ env.CONTAINER_NAME }}
+        image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
+
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: ${{ env.ECS_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
+        wait-for-service-stability: true
