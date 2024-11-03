@@ -36,7 +36,7 @@ jobs:
       id: build-image
       run: |
         # O Dockerfile está localizado em setup/Dockerfile
-        docker build -t minha_aplicacao:latest -f setup/Dockerfile setup
+        docker build -t minha_aplicacao:latest -f setup/Dockerfile .
         docker tag minha_aplicacao:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
         docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:latest
 
