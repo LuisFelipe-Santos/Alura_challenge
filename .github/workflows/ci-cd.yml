@@ -18,8 +18,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -31,18 +29,9 @@ jobs:
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: List files
-        run: ls -R
-
-      - name: Verificar diretório `drf_teste_documentacao`
+      - name: List files in setup directory
         run: |
-          if [ -d "./drf_teste_documentacao" ]; then
-            echo "Diretório encontrado!"
-            ls -R ./drf_teste_documentacao
-          else
-            echo "Diretório não encontrado!"
-            exit 1
-          fi
+          ls -al drf_teste_documentacao/setup
 
       - name: Build Docker image
         run: |
