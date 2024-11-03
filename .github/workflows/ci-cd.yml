@@ -30,10 +30,6 @@ jobs:
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: List directory contents
-        run: |
-          ls -la setup
-
       - name: Build Docker image
         run: |
           docker build -t minha_aplicacao:latest -f setup/Dockerfile setup
